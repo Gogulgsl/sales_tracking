@@ -15,5 +15,7 @@ Rails.application.routes.draw do
     resources :opportunities do
       post :assign_sales_team, on: :member
     end
+      resources :daily_statuses, only: [:index, :create, :show, :update, :destroy]
+
   end
 end
