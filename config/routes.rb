@@ -12,5 +12,8 @@ Rails.application.routes.draw do
     resources :opportunities
     post 'auth/register', to: 'auth#register'
     post 'auth/login', to: 'auth#login'
+    resources :opportunities do
+      post :assign_sales_team, on: :member
+    end
   end
 end

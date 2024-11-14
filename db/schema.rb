@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_11_11_111127) do
+ActiveRecord::Schema.define(version: 2024_11_13_103310) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -49,7 +49,9 @@ ActiveRecord::Schema.define(version: 2024_11_11_111127) do
     t.string "contact_person"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.bigint "sales_team_id"
     t.index ["product_id"], name: "index_opportunities_on_product_id"
+    t.index ["sales_team_id"], name: "index_opportunities_on_sales_team_id"
     t.index ["school_id"], name: "index_opportunities_on_school_id"
   end
 
@@ -120,6 +122,7 @@ ActiveRecord::Schema.define(version: 2024_11_11_111127) do
   add_foreign_key "cities_users", "cities"
   add_foreign_key "cities_users", "users"
   add_foreign_key "opportunities", "products"
+  add_foreign_key "opportunities", "sales_teams"
   add_foreign_key "opportunities", "schools"
   add_foreign_key "sales_teams", "users"
   add_foreign_key "sales_teams", "users", column: "manager_id"
