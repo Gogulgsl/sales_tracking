@@ -1,3 +1,4 @@
+# app/controllers/api/users_controller.rb
 class Api::UsersController < ApplicationController
   def index
     users = User.all
@@ -11,7 +12,11 @@ class Api::UsersController < ApplicationController
 
   def create
     user = User.new(user_params)
+    designation = params[:user][:designation] # Capture designation from request
+
     if user.save
+      # Call the method with designation only after user is saved
+      user.create_sales_team_entry(designation)
       render json: user, status: :created
     else
       render json: user.errors, status: :unprocessable_entity
@@ -35,8 +40,10 @@ class Api::UsersController < ApplicationController
 
   private
 
-  # Strong parameters for user creation and updates
   def user_params
-    params.require(:user).permit(:username, :password, :email_id, :mobile_number, :reporting_manager_id, city_ids: [], zone_ids: [])
+    params.require(:user).permit(
+      :username, :password, :email_id, :mobile_number, 
+      :reporting_manager_id, city_ids: [], zone_ids: []
+    )
   end
 end
