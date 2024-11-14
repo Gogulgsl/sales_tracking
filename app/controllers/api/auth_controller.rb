@@ -10,7 +10,7 @@ class Api::AuthController < ApplicationController
       render json: { error: 'Invalid username or password' }, status: :unauthorized
     end
   end
-  
+
   private
 
   # Encoding JWT token with user payload
@@ -24,5 +24,3 @@ class Api::AuthController < ApplicationController
   end
 end
 
-
-end
