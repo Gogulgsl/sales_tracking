@@ -10,9 +10,7 @@ class User < ApplicationRecord
   has_many :opportunities  
 
   validates :username, presence: true, uniqueness: true
-  validates :mobile_number, presence: true, length: { minimum: 10 }
-  validates :email_id, presence: true, uniqueness: true
-
+  
   # Method to create SalesTeam entry
   def create_sales_team_entry(designation)
     SalesTeam.create!(user_id: self.id, designation: designation, manager_id: self.reporting_manager_id)

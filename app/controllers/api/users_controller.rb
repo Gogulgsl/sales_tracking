@@ -1,5 +1,7 @@
 # app/controllers/api/users_controller.rb
 class Api::UsersController < ApplicationController
+ before_action :authorize_admin, only: [:admin_dashboard]
+ 
   def index
     users = User.all
     render json: users
@@ -12,11 +14,7 @@ class Api::UsersController < ApplicationController
 
   def create
     user = User.new(user_params)
-    designation = params[:user][:designation] # Capture designation from request
-
     if user.save
-      # Call the method with designation only after user is saved
-      user.create_sales_team_entry(designation)
       render json: user, status: :created
     else
       render json: user.errors, status: :unprocessable_entity
@@ -42,8 +40,23 @@ class Api::UsersController < ApplicationController
 
   def user_params
     params.require(:user).permit(
-      :username, :password, :email_id, :mobile_number, 
-      :reporting_manager_id, city_ids: [], zone_ids: []
+      :username, :password, :email_id, :mobile_number,
+      :reporting_manager_id, :role
     )
+  end
+
+  def authorize_admin
+    current_user = decode_token
+    unless current_user&.admin?
+      render json: { error: 'Forbidden: Admin access required' }, status: :forbidden
+    end
+  end
+
+  def decode_token
+    token = request.headers['Authorization']&.split(' ')&.last
+    decoded = JWT.decode(token, Rails.application.secret_key_base, true, algorithm: 'HS256')[0]
+    User.find(decoded['user_id'])
+  rescue JWT::DecodeError
+    nil
   end
 end
