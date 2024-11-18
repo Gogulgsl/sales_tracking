@@ -9,7 +9,6 @@ Rails.application.routes.draw do
     resources :products
     resources :schools
     resources :institutes
-    get 'dashboard', to: 'dashboards#index'
     resources :opportunities do
       collection do
         get :my_opportunities
@@ -23,9 +22,6 @@ Rails.application.routes.draw do
         post :login
       end
     end    
-    resources :opportunities do
-      post :assign_sales_team, on: :member
-    end
     resources :daily_statuses, only: [:index, :create, :show, :update, :destroy]
   end
 end
