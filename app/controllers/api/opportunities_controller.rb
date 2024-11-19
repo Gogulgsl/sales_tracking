@@ -13,10 +13,9 @@ class Api::OpportunitiesController < ApplicationController
     render json: @opportunity.as_json(include: [:product, :school]), status: :ok
   end
 
-  # GET /api/opportunities/my_opportunities
   def my_opportunities
     # Fetch the sales_team record associated with the current_user
-    sales_team = SalesTeam.where(sales_user_id: current_user.id)
+    sales_team = SalesTeam.find_by(sales_user_id: current_user.id)
     puts "============ Id: #{sales_team.inspect}=============="
 
     if sales_team.present?
@@ -29,7 +28,6 @@ class Api::OpportunitiesController < ApplicationController
       render json: { error: 'No opportunities found for the user' }, status: :not_found
     end
   end
-
 
   # POST /api/opportunities
   def create
