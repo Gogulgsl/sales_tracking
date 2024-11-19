@@ -1,12 +1,21 @@
-# app/controllers/api/daily_statuses_controller.rb
 module Api
   class DailyStatusesController < ApplicationController
-    before_action :set_daily_status, only: [:show, :update, :destroy]
+    before_action :authorize_request
+    # before_action :set_daily_status, only: [:show, :update, :destroy]
+
+    def index
+      @daily_statuses = DailyStatus.includes(:opportunity).all
+      render json: @daily_statuses.as_json(include: :opportunity)
+    end
 
     # GET /api/daily_statuses
-    def index
-      @daily_statuses = DailyStatus.all
-      render json: @daily_statuses
+    def my_daily_statuses
+      @daily_statuses = DailyStatus
+                        .joins("INNER JOIN sales_teams ON sales_teams.sales_user_id = daily_statuses.sales_user_id")
+                        .where(sales_teams: { sales_user_id: current_user.id })
+                        .includes(:opportunity)
+
+      render json: @daily_statuses.as_json(include: :opportunity)
     end
 
     # GET /api/daily_statuses/:id
@@ -16,7 +25,7 @@ module Api
 
     # POST /api/daily_statuses
     def create
-      @daily_status = DailyStatus.new(daily_status_params)
+      @daily_status = DailyStatus.new(daily_status_params.merge(sales_user_id: current_user.id))
       if @daily_status.save
         render json: @daily_status, status: :created
       else
@@ -41,13 +50,19 @@ module Api
 
     private
 
-    def set_daily_status
-      @daily_status = DailyStatus.find(params[:id])
-    end
+    # Fetch only statuses linked to the current user
+    # def set_daily_status
+    #   @daily_status = DailyStatus
+    #                   .joins(:sales_user)
+    #                   .where(sales_users: { sales_user_id: current_user.id })
+    #                   .find_by(id: params[:id])
+
+    #   render json: { error: 'Daily status not found' }, status: :not_found unless @daily_status
+    # end
 
     def daily_status_params
       params.require(:daily_status).permit(
-        :sales_team_id, 
+        :sales_user_id,
         :opportunity_id, 
         :decision_maker, 
         :follow_up, 

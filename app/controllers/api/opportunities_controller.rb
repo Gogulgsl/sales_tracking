@@ -15,16 +15,21 @@ class Api::OpportunitiesController < ApplicationController
 
   # GET /api/opportunities/my_opportunities
   def my_opportunities
-    sales_team_ids = SalesTeam.where(user_id: current_user.id).pluck(:id)
+    # Fetch the sales_team record associated with the current_user
+    sales_team = SalesTeam.find_by(sales_user_id: current_user.id)
+    puts "============ Id: #{sales_team.inspect}=============="
 
-    if sales_team_ids.present?
+    if sales_team.present?
+      # Retrieve opportunities associated with the sales_user_id
       opportunities = Opportunity.includes(:product, :school)
-                                 .where(sales_team_id: sales_team_ids)
+                                 .find_by(sales_user_id: sales_team.sales_user_id)
+
       render json: opportunities.as_json(include: [:product, :school]), status: :ok
     else
       render json: { error: 'No opportunities found for the user' }, status: :not_found
     end
   end
+
 
   # POST /api/opportunities
   def create

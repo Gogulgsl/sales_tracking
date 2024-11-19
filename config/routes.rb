@@ -22,6 +22,10 @@ Rails.application.routes.draw do
         post :login
       end
     end    
-    resources :daily_statuses, only: [:index, :create, :show, :update, :destroy]
+    resources :daily_statuses do 
+      collection do
+        get :my_daily_statuses
+      end
+    end
   end
 end
