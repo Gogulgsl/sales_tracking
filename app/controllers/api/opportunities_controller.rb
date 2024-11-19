@@ -16,7 +16,7 @@ class Api::OpportunitiesController < ApplicationController
   # GET /api/opportunities/my_opportunities
   def my_opportunities
     # Fetch the sales_team record associated with the current_user
-    sales_team = SalesTeam.find_by(sales_user_id: current_user.id)
+    sales_team = SalesTeam.where(sales_user_id: current_user.id)
     puts "============ Id: #{sales_team.inspect}=============="
 
     if sales_team.present?
