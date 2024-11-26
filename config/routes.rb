@@ -27,6 +27,7 @@ Rails.application.routes.draw do
         get :my_daily_statuses
       end
     end
-    resources :master_data, only: [:index, :show, :create, :update, :destroy]
+    resources :master_data, except: [:create]
+    post 'add_master_data', to: 'master_data#create'
   end
 end

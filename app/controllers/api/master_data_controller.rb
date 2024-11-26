@@ -1,5 +1,5 @@
 class Api::MasterDataController < ApplicationController
-  before_action :authorize_request
+  before_action :authorize_request, only: [:create] 
   before_action :set_master_data, only: [:show, :update, :destroy]
 
   # GET /api/master_data
