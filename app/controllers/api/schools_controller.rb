@@ -116,7 +116,9 @@ end
       :board,
       :website,
       :part_of_group_school,
-      :institute_id
+      :institute_id,
+      :lalitude, 
+      :longitude
     )
   end
 end
