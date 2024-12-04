@@ -4,6 +4,7 @@ class User < ApplicationRecord
 
   # Associations
   has_one :sales_team, dependent: :destroy # Assuming one-to-one relationship with sales_team
+  has_many :opportunities, dependent: :nullify # This allows a user to have many opportunities
 
   # Validations
   validates :username, presence: true, uniqueness: true, length: { maximum: 50 }

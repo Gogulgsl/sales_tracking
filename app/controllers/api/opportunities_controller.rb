@@ -1,56 +1,51 @@
 class Api::OpportunitiesController < ApplicationController
   before_action :authorize_user, except: [:index, :show, :my_opportunities]
-  before_action :set_opportunity, only: [:show, :update, :destroy, :assign_sales_team]
+  before_action :set_opportunity, only: [:show, :update, :destroy]
 
   # GET /api/opportunities
   def index
-    opportunities = Opportunity.includes(:product, :school).all
-    render json: opportunities.as_json(include: [:product, :school]), status: :ok
+    opportunities = Opportunity.includes(:product, :school, :user).all
+    render json: opportunities.as_json(include: [:product, :school, :user]), status: :ok
   end
 
   # GET /api/opportunities/:id
   def show
-    render json: @opportunity.as_json(include: [:product, :school]), status: :ok
+    render json: @opportunity.as_json(include: [:product, :school, :user]), status: :ok
   end
 
   def my_opportunities
-    sales_team = SalesTeam.find_by(user_id: current_user.id) 
+    # Instead of looking for the sales team, we will now use current_user directly.
+    opportunities = Opportunity.includes(:product, :school, :user)
+                               .where(user_id: current_user.id) # Directly filter using current_user.id
 
-    if sales_team.present?
-      opportunities = Opportunity.includes(:product, :school)
-                                 .where(user_id: sales_team.user_id) 
-
-      render json: opportunities.as_json(include: [:product, :school]), status: :ok
+    if opportunities.exists?
+      render json: opportunities.as_json(include: [:product, :school, :user]), status: :ok
     else
       render json: { error: 'No opportunities found for the user' }, status: :not_found
     end
   end
 
-
-
-  # POST /api/opportunities
   def create
-    # Find the SalesTeam using the user_id from the opportunity parameters
-    sales_team = SalesTeam.find_by(user_id: opportunity_params[:user_id])
-    
-    if sales_team.nil?
-      render json: { error: 'Sales team must exist for the specified user' }, status: :unprocessable_entity
-    else
-      opportunity = Opportunity.new(opportunity_params)
-      opportunity.sales_team = sales_team  # Associate the SalesTeam to the Opportunity
+    # Ensure the user is associated with the opportunity
+    user = User.find_by(id: opportunity_params[:user_id]) || current_user
 
-      if opportunity.save
-        render json: opportunity.as_json(include: [:product, :school]), status: :created
-      else
-        render json: opportunity.errors, status: :unprocessable_entity
-      end
+    # Create the opportunity and set createdby_user_id
+    opportunity = Opportunity.new(opportunity_params)
+    opportunity.user = user  # Ensure the opportunity is associated with the user
+    opportunity.createdby_user_id = user.id # Set the createdby_user_id explicitly
+    opportunity.updatedby_user_id = user.id # Set the updatedby_user_id explicitly
+
+    if opportunity.save
+      render json: opportunity.as_json(include: [:product, :school, :user]), status: :created
+    else
+      render json: opportunity.errors, status: :unprocessable_entity
     end
   end
 
   # PUT /api/opportunities/:id
   def update
     if @opportunity.update(opportunity_params)
-      render json: @opportunity.as_json(include: [:product, :school]), status: :ok
+      render json: @opportunity.as_json(include: [:product, :school, :user]), status: :ok
     else
       render json: @opportunity.errors, status: :unprocessable_entity
     end
@@ -66,12 +61,12 @@ class Api::OpportunitiesController < ApplicationController
 
   # Fetch opportunity by ID
   def set_opportunity
-    @opportunity = Opportunity.includes(:product, :school).find(params[:id])
+    @opportunity = Opportunity.includes(:product, :school, :user).find(params[:id])
   end
 
   # Permit opportunity parameters
   def opportunity_params
-    params.require(:opportunity).permit(:school_id, :product_id, :start_date, :contact_id, :user_id)
+    params.require(:opportunity).permit(:school_id, :product_id, :start_date, :contact_id, :user_id, :opportunity_name, :createdby_user_id, :updatedby_user_id, :last_stage)
   end
 
   # Ensure the request has a valid Authorization header
@@ -79,3 +74,4 @@ class Api::OpportunitiesController < ApplicationController
     render json: { error: 'Unauthorized' }, status: :unauthorized unless request.headers['Authorization'].present?
   end
 end
+
