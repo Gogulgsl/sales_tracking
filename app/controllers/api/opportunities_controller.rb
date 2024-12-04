@@ -71,7 +71,7 @@ class Api::OpportunitiesController < ApplicationController
 
   # Permit opportunity parameters
   def opportunity_params
-    params.require(:opportunity).permit(:school_id, :product_id, :start_date, :contact_person, :user_id)
+    params.require(:opportunity).permit(:school_id, :product_id, :start_date, :contact_id, :user_id)
   end
 
   # Ensure the request has a valid Authorization header

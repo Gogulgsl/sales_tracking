@@ -1,6 +1,6 @@
 module Api
   class DailyStatusesController < ApplicationController
-    before_action :authorize_request
+    # before_action :authorize_request
     before_action :set_daily_status, only: [:show, :edit, :update, :destroy]
 
     # GET /daily_statuses
@@ -21,6 +21,7 @@ module Api
     # GET /daily_statuses/new
     def new
       @daily_status = DailyStatus.new
+      render json: @daily_statuses
     end
 
     # POST /daily_statuses
@@ -28,9 +29,9 @@ module Api
       @daily_status = DailyStatus.new(daily_status_params)
 
       if @daily_status.save
-        redirect_to @daily_status, notice: 'Daily status was successfully created.'
+        render json: @daily_status, status: :created
       else
-        render :new
+        render json: @daily_status.errors, status: :unprocessable_entity
       end
     end
 
