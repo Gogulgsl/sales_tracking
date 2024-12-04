@@ -41,9 +41,9 @@ module Api
     # PATCH/PUT /daily_statuses/:id
     def update
       if @daily_status.update(daily_status_params)
-        redirect_to @daily_status, notice: 'Daily status was successfully updated.'
+        render json: @daily_status, status: :ok
       else
-        render :edit
+        render json: { error: 'Failed to update daily status', details: @daily_status.errors }, status: :unprocessable_entity
       end
     end
 
