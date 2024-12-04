@@ -5,6 +5,7 @@ module Api
     # GET /contacts
     def index
       @contacts = Contact.all
+      render json :@contacts
     end
 
     # GET /contacts/:id
@@ -22,9 +23,9 @@ module Api
       @contact.createdby_user_id = current_user.id # Assuming you have `current_user`
 
       if @contact.save
-        redirect_to @contact, notice: 'Contact was successfully created.'
+        render json: @contact, status: :created
       else
-        render :new, status: :unprocessable_entity
+        render json: @contact.errors, status: :unprocessable_entity
       end
     end
 
