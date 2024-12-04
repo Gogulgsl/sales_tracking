@@ -1,78 +1,71 @@
 module Api
   class DailyStatusesController < ApplicationController
     before_action :authorize_request
-    # before_action :set_daily_status, only: [:show, :update, :destroy]
+    before_action :set_daily_status, only: [:show, :edit, :update, :destroy]
 
+    # GET /daily_statuses
     def index
-      @daily_statuses = DailyStatus.includes(:opportunity).all
-      render json: @daily_statuses.as_json(include: :opportunity)
+      @daily_statuses = DailyStatus.includes(:decision_maker_contact, :person_met_contact)
+
+      render json: @daily_statuses.as_json(
+        include: {
+          decision_maker_contact: { only: [:id, :contact_name, :mobile, :decision_maker] },
+          person_met_contact: { only: [:id, :contact_name, :mobile, :decision_maker] }
+        }
+      )
     end
 
-    # GET /api/daily_statuses
-    def my_daily_statuses
-      @daily_statuses = DailyStatus
-                        .joins("INNER JOIN sales_teams ON sales_teams.sales_user_id = daily_statuses.sales_user_id")
-                        .where(sales_teams: { sales_user_id: current_user.id })
-                        .includes(:opportunity)
-
-      render json: @daily_statuses.as_json(include: :opportunity)
-    end
-
-    # GET /api/daily_statuses/:id
     def show
-      render json: @daily_status
     end
 
-    # POST /api/daily_statuses
+    # GET /daily_statuses/new
+    def new
+      @daily_status = DailyStatus.new
+    end
+
+    # POST /daily_statuses
     def create
-      @daily_status = DailyStatus.new(daily_status_params.merge(sales_user_id: current_user.id))
+      @daily_status = DailyStatus.new(daily_status_params)
+
       if @daily_status.save
-        render json: @daily_status, status: :created
+        redirect_to @daily_status, notice: 'Daily status was successfully created.'
       else
-        render json: @daily_status.errors, status: :unprocessable_entity
+        render :new
       end
     end
 
-    # PATCH/PUT /api/daily_statuses/:id
+    # GET /daily_statuses/:id/edit
+    def edit
+    end
+
+    # PATCH/PUT /daily_statuses/:id
     def update
       if @daily_status.update(daily_status_params)
-        render json: @daily_status
+        redirect_to @daily_status, notice: 'Daily status was successfully updated.'
       else
-        render json: @daily_status.errors, status: :unprocessable_entity
+        render :edit
       end
     end
 
-    # DELETE /api/daily_statuses/:id
+    # DELETE /daily_statuses/:id
     def destroy
       @daily_status.destroy
-      head :no_content
+      redirect_to daily_statuses_url, notice: 'Daily status was successfully deleted.'
     end
 
     private
 
-    # Fetch only statuses linked to the current user
-    # def set_daily_status
-    #   @daily_status = DailyStatus
-    #                   .joins(:sales_user)
-    #                   .where(sales_users: { sales_user_id: current_user.id })
-    #                   .find_by(id: params[:id])
+    # Use callbacks to share common setup or constraints between actions.
+    def set_daily_status
+      @daily_status = DailyStatus.find(params[:id])
+    end
 
-    #   render json: { error: 'Daily status not found' }, status: :not_found unless @daily_status
-    # end
-
+    # Only allow a trusted parameter "white list" through.
     def daily_status_params
       params.require(:daily_status).permit(
-        :sales_user_id,
-        :opportunity_id, 
-        :decision_maker, 
-        :follow_up, 
-        :persons_met, 
-        :designation, 
-        :mail_id, 
-        :mobile_number, 
-        :discussion_point, 
-        :next_steps, 
-        :stage
+        :user_id, :opportunity_id, :follow_up, :designation, :mail_id,
+        :discussion_point, :next_steps, :stage, :decision_maker_contact_id,
+        :person_met_contact_id, :school_id, :createdby_user_id, :updatedby_user_id
       )
     end
   end

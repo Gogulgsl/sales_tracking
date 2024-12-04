@@ -1,18 +1,18 @@
-# app/models/user.rb
 class User < ApplicationRecord
+  # Secure password handling
   has_secure_password
-  has_one :sales_team, dependent: :destroy
 
-  has_and_belongs_to_many :cities, join_table: :cities_users
-  has_and_belongs_to_many :zones, join_table: :users_zones
-  has_many :direct_reports, class_name: 'User', foreign_key: 'reporting_manager_id'
-  belongs_to :reporting_manager, class_name: 'User', optional: true
-  has_many :opportunities  
+  # Associations
+  has_one :sales_team, dependent: :destroy # Assuming one-to-one relationship with sales_team
 
-  validates :username, presence: true, uniqueness: true
-  
-  # Method to create SalesTeam entry
-  def create_sales_team_entry(designation)
-    SalesTeam.create!(user_id: self.id, designation: designation, manager_id: self.reporting_manager_id)
+  # Validations
+  validates :username, presence: true, uniqueness: true, length: { maximum: 50 }
+  validates :password, presence: true, length: { minimum: 6 }, if: :password_required?
+  validates :role, presence: true, inclusion: { in: %w[admin sales user manager] } # Adjust roles as needed
+
+  private
+
+  def password_required?
+    new_record? || !password.nil?
   end
 end

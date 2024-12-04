@@ -7,7 +7,11 @@ Rails.application.routes.draw do
     resources :users_zones, only: [:index, :create, :destroy]
     resources :sales_teams
     resources :products
-    resources :schools
+    resources :schools do
+      collection do
+        post :upload
+      end
+    end
     resources :institutes
     resources :opportunities do
       collection do
@@ -29,5 +33,8 @@ Rails.application.routes.draw do
     end
     resources :master_data, except: [:create]
     post 'add_master_data', to: 'master_data#create'
+    resources :daily_statuses
+    resources :contacts
+    resources :stages
   end
 end

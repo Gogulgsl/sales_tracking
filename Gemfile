@@ -43,3 +43,6 @@ gem 'puma', '~> 5.0'
 
 gem 'jwt'
 
+gem 'roo'
+
+gem 'roo-xls' # if you're dealing with older .xls files

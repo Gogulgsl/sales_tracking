@@ -14,11 +14,11 @@ class Api::OpportunitiesController < ApplicationController
   end
 
   def my_opportunities
-    sales_team = SalesTeam.find_by(sales_user_id: current_user.id)
+    sales_team = SalesTeam.find_by(user_id: current_user.id) 
 
     if sales_team.present?
       opportunities = Opportunity.includes(:product, :school)
-                                 .where(sales_user_id: sales_team.sales_user_id)
+                                 .where(user_id: sales_team.user_id) 
 
       render json: opportunities.as_json(include: [:product, :school]), status: :ok
     else
@@ -27,13 +27,23 @@ class Api::OpportunitiesController < ApplicationController
   end
 
 
+
   # POST /api/opportunities
   def create
-    opportunity = Opportunity.new(opportunity_params)
-    if opportunity.save
-      render json: opportunity.as_json(include: [:product, :school]), status: :created
+    # Find the SalesTeam using the user_id from the opportunity parameters
+    sales_team = SalesTeam.find_by(user_id: opportunity_params[:user_id])
+    
+    if sales_team.nil?
+      render json: { error: 'Sales team must exist for the specified user' }, status: :unprocessable_entity
     else
-      render json: opportunity.errors, status: :unprocessable_entity
+      opportunity = Opportunity.new(opportunity_params)
+      opportunity.sales_team = sales_team  # Associate the SalesTeam to the Opportunity
+
+      if opportunity.save
+        render json: opportunity.as_json(include: [:product, :school]), status: :created
+      else
+        render json: opportunity.errors, status: :unprocessable_entity
+      end
     end
   end
 
@@ -61,7 +71,7 @@ class Api::OpportunitiesController < ApplicationController
 
   # Permit opportunity parameters
   def opportunity_params
-    params.require(:opportunity).permit(:school_id, :product_id, :start_date, :contact_person, :sales_team_id)
+    params.require(:opportunity).permit(:school_id, :product_id, :start_date, :contact_person, :user_id)
   end
 
   # Ensure the request has a valid Authorization header
