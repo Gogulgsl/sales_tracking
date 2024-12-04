@@ -5,7 +5,7 @@ module Api
     # GET /contacts
     def index
       @contacts = Contact.all
-      render json :@contacts
+      render json: @contacts
     end
 
     # GET /contacts/:id
