@@ -4,8 +4,8 @@ class Api::OpportunitiesController < ApplicationController
 
   # GET /api/opportunities
   def index
-    opportunities = Opportunity.includes(:product, :school, :user).all
-    render json: opportunities.as_json(include: [:product, :school, :user]), status: :ok
+    opportunities = Opportunity.includes(:product, :school, :user, :contact).all
+    render json: opportunities.as_json(include: [:product, :school, :user, :contact]), status: :ok
   end
 
   # GET /api/opportunities/:id
