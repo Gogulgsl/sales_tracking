@@ -10,7 +10,7 @@ class Api::OpportunitiesController < ApplicationController
 
   # GET /api/opportunities/:id
   def show
-    render json: @opportunity.as_json(include: [:product, :school, :user]), status: :ok
+    render json: @opportunity.as_json(include: [:product, :school, :user, :contact]), status: :ok
   end
 
   def my_opportunities
@@ -19,7 +19,7 @@ class Api::OpportunitiesController < ApplicationController
                                .where(user_id: current_user.id) # Directly filter using current_user.id
 
     if opportunities.exists?
-      render json: opportunities.as_json(include: [:product, :school, :user]), status: :ok
+      render json: opportunities.as_json(include: [:product, :school, :user, :contact]), status: :ok
     else
       render json: { error: 'No opportunities found for the user' }, status: :not_found
     end
@@ -45,7 +45,7 @@ class Api::OpportunitiesController < ApplicationController
   # PUT /api/opportunities/:id
   def update
     if @opportunity.update(opportunity_params)
-      render json: @opportunity.as_json(include: [:product, :school, :user]), status: :ok
+      render json: @opportunity.as_json(include: [:product, :school, :user, :contact]), status: :ok
     else
       render json: @opportunity.errors, status: :unprocessable_entity
     end
@@ -61,7 +61,7 @@ class Api::OpportunitiesController < ApplicationController
 
   # Fetch opportunity by ID
   def set_opportunity
-    @opportunity = Opportunity.includes(:product, :school, :user).find(params[:id])
+    @opportunity = Opportunity.includes(:product, :school, :user, :contact).find(params[:id])
   end
 
   # Permit opportunity parameters
