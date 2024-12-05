@@ -36,7 +36,7 @@ class Api::OpportunitiesController < ApplicationController
     opportunity.updatedby_user_id = user.id # Set the updatedby_user_id explicitly
 
     if opportunity.save
-      render json: opportunity.as_json(include: [:product, :school, :user]), status: :created
+      render json: opportunity.as_json(include: [:product, :school, :user, :contact]), status: :created
     else
       render json: opportunity.errors, status: :unprocessable_entity
     end
