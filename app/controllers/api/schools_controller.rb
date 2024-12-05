@@ -118,7 +118,8 @@ end
       :part_of_group_school,
       :institute_id,
       :lalitude, 
-      :longitude
+      :longitude,
+      :is_active
     )
   end
 end
