@@ -15,10 +15,8 @@ Rails.application.routes.draw do
     resources :institutes
     resources :opportunities do
       collection do
+        post :add_opportunities, to: 'opportunities#create'
         get :my_opportunities
-      end
-      member do
-        post :assign_sales_team
       end
     end
     resources :auth, only: [] do
