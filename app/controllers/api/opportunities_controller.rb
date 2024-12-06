@@ -15,7 +15,7 @@ class Api::OpportunitiesController < ApplicationController
 
   def my_opportunities
     # Instead of looking for the sales team, we will now use current_user directly.
-    opportunities = Opportunity.includes(:product, :school, :user)
+    opportunities = Opportunity.includes(:product, :school, :user, :contact)
                                .where(user_id: current_user.id) # Directly filter using current_user.id
 
     if opportunities.exists?
