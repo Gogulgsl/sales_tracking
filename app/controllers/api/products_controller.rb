@@ -4,7 +4,7 @@ class Api::ProductsController < ApplicationController
 
   # GET /api/products
   def index
-    @products = Product.all
+    @products = Product.where(is_active: true)
     render json: @products
   end
 
