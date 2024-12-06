@@ -1,5 +1,6 @@
 class Api::ProductsController < ApplicationController
   before_action :set_product, only: [:show, :update, :destroy]
+  # before_action :authorize_user, except: [:index, :show, :my_opportunities, :create]
 
   # GET /api/products
   def index
@@ -46,6 +47,10 @@ class Api::ProductsController < ApplicationController
 
     # Only allow a trusted parameter "white list" through.
     def product_params
-      params.require(:product).permit(:product_name, :description, :supplier, :unit, :price, :date, available_days: [])
+      params.require(:product).permit(:product_name, :description, :supplier, :unit, :price, :date, :is_active, available_days: [])
     end
+
+  #   def authorize_user
+  #   render json: { error: 'Unauthorized' }, status: :unauthorized unless request.headers['Authorization'].present?
+  # end
 end
