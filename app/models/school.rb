@@ -1,7 +1,9 @@
 class School < ApplicationRecord
   belongs_to :institute
 
-  validates :name, presence: true
-  validates :lead_source, presence: true
-  # Add other relevant validations as needed
+  belongs_to :created_by_user, class_name: 'User', optional: true
+  belongs_to :updated_by_user, class_name: 'User', optional: true
+
+  validates :name, :institute_id, presence: true
+  has_many :contacts, dependent: :destroy
 end

@@ -4,13 +4,26 @@ class Api::OpportunitiesController < ApplicationController
 
   # GET /api/opportunities
   def index
-    opportunities = Opportunity.includes(:product, :school, :user, :contact).all
+    if current_user.role == 'sales_executive'
+      # Filter opportunities for sales executives with `is_active: true`
+      opportunities = Opportunity.includes(:product, :school, :user, :contact)
+                                 .where(is_active: true)
+    else
+      # For all other roles, fetch all opportunities
+      opportunities = Opportunity.includes(:product, :school, :user, :contact).all
+    end
+
     render json: opportunities.as_json(include: [:product, :school, :user, :contact]), status: :ok
   end
 
   # GET /api/opportunities/:id
   def show
     render json: @opportunity.as_json(include: [:product, :school, :user, :contact]), status: :ok
+  end
+
+  def active_opportunities
+    opportunities = Opportunity.where(is_active: true)
+    render json: opportunities
   end
 
   def my_opportunities

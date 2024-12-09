@@ -29,6 +29,11 @@ module Api
       end
     end
 
+    def active_contacts
+      contacts = Contact.where(is_active: true)
+      render json: contacts
+    end
+
     # GET /contacts/:id/edit
     def edit
     end

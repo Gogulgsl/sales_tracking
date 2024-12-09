@@ -4,7 +4,7 @@ class Api::ProductsController < ApplicationController
 
   # GET /api/products
   def index
-    @products = Product.where(is_active: true)
+    @products = Product.all
     render json: @products
   end
 
@@ -22,6 +22,11 @@ class Api::ProductsController < ApplicationController
     else
       render json: @product.errors, status: :unprocessable_entity
     end
+  end
+
+  def active_products
+    products = Product.where(is_active: true)
+    render json: products
   end
 
   # PUT /api/products/:id

@@ -1,4 +1,5 @@
 class Contact < ApplicationRecord
+  has_many :institutes
   belongs_to :school
   belongs_to :created_by, class_name: 'User', foreign_key: 'createdby_user_id', optional: true
   belongs_to :updated_by, class_name: 'User', foreign_key: 'updatedby_user_id', optional: true

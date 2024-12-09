@@ -1,5 +1,8 @@
 class ApplicationController < ActionController::API
   require 'jwt'
+ include ActionController::Helpers
+
+  helper_method :current_user
 
   private
 
@@ -29,5 +32,11 @@ class ApplicationController < ActionController::API
   # Ensure the user is authorized
   def authorize_request
     render json: { error: 'Unauthorized' }, status: :unauthorized unless current_user
+  end
+
+  def authorize_role(*roles)
+    unless current_user&.role && roles.include?(current_user.role)
+      render json: { error: 'Unauthorized - Insufficient permissions' }, status: :forbidden
+    end
   end
 end
