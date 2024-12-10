@@ -1,6 +1,6 @@
 class Api::SchoolsController < ApplicationController
   before_action :set_school, only: %i[show update destroy contacts]
-  before_action :authorize_user, except: [:index, :show, :my_opportunities]
+  before_action :authorize_user, except: [:index, :show, :my_opportunities, :active_schools]
   before_action -> { authorize_role('admin', 'sales_executive') }, only: [:index]
 
 
