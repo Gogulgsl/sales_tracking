@@ -12,17 +12,18 @@ class Api::SchoolsController < ApplicationController
 
     if current_user.role == 'admin'
       # Admin can see all schools
-      schools = School.all
+      schools = School.includes(:institute, :contacts).all
     elsif current_user.role == 'sales_executive'
       # Sales executive can only see active schools
-      schools = School.where(is_active: true)
+      schools = School.includes(:institute, :contacts).where(is_active: true)
     else
       # Default case: If role is not recognized, return an empty list or raise an error
       schools = []
     end
 
-    render json: schools
+    render json: schools, include: { institute: { only: [:name_of_head_of_institution, :institute_email_id, :designation] }, contacts: { only: [:contact_name, :mobile, :decision_maker] } }
   end
+
 
 
   def active_schools
