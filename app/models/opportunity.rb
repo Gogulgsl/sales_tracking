@@ -2,9 +2,10 @@ class Opportunity < ApplicationRecord
   belongs_to :school
   belongs_to :product
   belongs_to :user, optional: true 
-  belongs_to :contact
+  has_many :opportunities_contacts
+  has_many :contacts, through: :opportunities_contacts
 
-  validates :start_date, :contact_id, presence: true
+  validates :start_date, presence: true
   validates :user, presence: true
 
   has_many :daily_statuses

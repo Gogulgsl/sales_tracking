@@ -1,55 +1,52 @@
 class Api::OpportunitiesController < ApplicationController
-  before_action :authorize_user, except: [:index, :show, :my_opportunities]
+  before_action :authorize_user, except: [:index, :show, :active_opportunities]
   before_action :set_opportunity, only: [:show, :update, :destroy]
 
   # GET /api/opportunities
-  def index
-    if current_user.role == 'sales_executive'
-      # Filter opportunities for sales executives with `is_active: true`
-      opportunities = Opportunity.includes(:product, :school, :user, :contact)
-                                 .where(is_active: true)
-    else
-      # For all other roles, fetch all opportunities
-      opportunities = Opportunity.includes(:product, :school, :user, :contact).all
-    end
-
-    render json: opportunities.as_json(include: [:product, :school, :user, :contact]), status: :ok
-  end
+  def index 
+    opportunities = Opportunity.includes(:product, :school, :user, :contacts).all
+    render json: opportunities.as_json(include: [:product, :school, :user, :contacts]), status: :ok
+  end 
 
   # GET /api/opportunities/:id
   def show
-    render json: @opportunity.as_json(include: [:product, :school, :user, :contact]), status: :ok
+    render json: @opportunity.as_json(include: [:product, :school, :user, :contacts]), status: :ok
   end
 
   def active_opportunities
-    opportunities = Opportunity.where(is_active: true)
-    render json: opportunities
+    # Include all related tables to fetch associated data
+    opportunities = Opportunity.includes(:product, :school, :user, :contacts)
+                                .where(is_active: true)
+                                
+    # Render JSON with associations
+    render json: opportunities.as_json(include: [:product, :school, :user, :contacts]), status: :ok
   end
 
   def my_opportunities
     # Instead of looking for the sales team, we will now use current_user directly.
-    opportunities = Opportunity.includes(:product, :school, :user, :contact)
-                               .where(user_id: current_user.id) # Directly filter using current_user.id
+    opportunities = Opportunity.includes(:product, :school, :user, :contacts)
+                              .where(user_id: current_user.id, is_active: true) # Directly filter using current_user.id
 
     if opportunities.exists?
-      render json: opportunities.as_json(include: [:product, :school, :user, :contact]), status: :ok
+      render json: opportunities.as_json(include: [:product, :school, :user, :contacts]), status: :ok
     else
       render json: { error: 'No opportunities found for the user' }, status: :not_found
     end
   end
 
   def create
-    # Ensure the user is associated with the opportunity
     user = User.find_by(id: opportunity_params[:user_id]) || current_user
 
-    # Create the opportunity and set createdby_user_id
-    opportunity = Opportunity.new(opportunity_params)
-    opportunity.user = user  # Ensure the opportunity is associated with the user
-    opportunity.createdby_user_id = user.id # Set the createdby_user_id explicitly
-    opportunity.updatedby_user_id = user.id # Set the updatedby_user_id explicitly
+    opportunity = Opportunity.new(opportunity_params.except(:contact_ids))
+    opportunity.user = user
+    opportunity.createdby_user_id = user.id
+    opportunity.updatedby_user_id = user.id
 
     if opportunity.save
-      render json: opportunity.as_json(include: [:product, :school, :user, :contact]), status: :created
+      # Associate contacts
+      opportunity.contacts << Contact.where(id: opportunity_params[:contact_ids]) if opportunity_params[:contact_ids].present?
+
+      render json: opportunity.as_json(include: [:product, :school, :user, :contacts]), status: :created
     else
       render json: opportunity.errors, status: :unprocessable_entity
     end
@@ -79,7 +76,11 @@ class Api::OpportunitiesController < ApplicationController
 
   # Permit opportunity parameters
   def opportunity_params
-    params.require(:opportunity).permit(:school_id, :product_id, :start_date, :contact_id, :user_id, :opportunity_name, :createdby_user_id, :updatedby_user_id, :last_stage, :is_active)
+    params.require(:opportunity).permit(
+      :school_id, :product_id, :start_date, :user_id, 
+      :opportunity_name, :createdby_user_id, :updatedby_user_id, 
+      :last_stage, :is_active, contact_ids: []
+    )
   end
 
   # Ensure the request has a valid Authorization header
