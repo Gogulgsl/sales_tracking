@@ -1,5 +1,5 @@
 class Api::SchoolsController < ApplicationController
-  before_action :set_school, only: %i[show update destroy contacts]
+  before_action :set_school, only: %i[update_contacts show update destroy contacts]
   before_action :authorize_user, except: [:index, :show, :my_opportunities, :active_schools]
   before_action -> { authorize_role('admin', 'sales_executive') }, only: [:index]
 
@@ -76,6 +76,75 @@ class Api::SchoolsController < ApplicationController
     else
       render json: { message: 'No contacts found for this school' }, status: :not_found
     end
+  end
+
+  def update_contacts
+    ActiveRecord::Base.transaction do
+      if params[:contacts].blank?
+        render json: { error: 'No contacts data provided' }, status: :unprocessable_entity
+        return
+      end
+
+      updated_contacts = []
+
+      params[:contacts].each do |contact_data|
+        if contact_data[:id].present?
+          # Update existing contact by ID
+          contact = Contact.find_by(id: contact_data[:id], school_id: @school.id)
+          if contact
+            contact.update!(
+              contact_name: contact_data[:contact_name],
+              mobile: contact_data[:mobile],
+              decision_maker: contact_data[:decision_maker]
+            )
+            updated_contacts << contact
+          else
+            render json: { error: "Contact with ID #{contact_data[:id]} not found" }, status: :not_found
+            raise ActiveRecord::Rollback
+          end
+        else
+          # Check if the contact already exists by mobile number (or another unique identifier)
+          existing_contact = @school.contacts.find_by(mobile: contact_data[:mobile])
+          
+          if existing_contact
+            # Update the existing contact instead of creating a new one
+            existing_contact.update!(
+              contact_name: contact_data[:contact_name],
+              decision_maker: contact_data[:decision_maker]
+            )
+            updated_contacts << existing_contact
+          else
+            # Create new contact
+            new_contact = @school.contacts.create!(
+              contact_name: contact_data[:contact_name],
+              mobile: contact_data[:mobile],
+              decision_maker: contact_data[:decision_maker]
+            )
+            updated_contacts << new_contact
+          end
+        end
+      end
+
+      # Handle removing the old contacts if provided
+      if params[:remove_old_contact_ids].present?
+        params[:remove_old_contact_ids].each do |contact_id|
+          old_contact = @school.contacts.find_by(id: contact_id)
+          if old_contact
+            old_contact.destroy
+            Rails.logger.info("Removed old contact with ID: #{old_contact.id}")
+          else
+            render json: { error: "Old contact with ID #{contact_id} not found" }, status: :not_found
+            raise ActiveRecord::Rollback
+          end
+        end
+      end
+
+      render json: { message: 'Contacts updated successfully', contacts: updated_contacts }, status: :ok
+    end
+  rescue ActiveRecord::RecordInvalid => e
+    render json: { error: e.message }, status: :unprocessable_entity
+  rescue StandardError => e
+    render json: { error: "An unexpected error occurred: #{e.message}" }, status: :internal_server_error
   end
 
   # PUT /api/schools/:id
