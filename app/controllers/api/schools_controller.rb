@@ -37,33 +37,35 @@ class Api::SchoolsController < ApplicationController
   end
 
   def create
-  ActiveRecord::Base.transaction do
-    # Create or find the associated Institute
-    institute = find_or_create_institute(params[:school][:institute])
+    ActiveRecord::Base.transaction do
+      institute = find_or_create_institute(params[:school][:institute])
 
-    # Create the School with the found or created Institute ID
-    school = School.new(school_params.merge(institute_id: institute.id))
+      school = School.new(school_params.merge(institute_id: institute.id))
 
-    if school.save
-      # Iterate through the contacts and create each contact associated with the school
-      contacts = []
-      params[:school][:contacts].each do |contact_params|
-        contact = find_or_create_contact(contact_params, school.id)
-        contacts << contact
+      if school.save
+        contacts = []
+
+        if params[:school][:contact].present?
+          contact = find_or_create_contact(params[:school][:contact], school.id)
+          contacts << contact
+        elsif params[:school][:contacts].present?
+          params[:school][:contacts].each do |contact_params|
+            contact = find_or_create_contact(contact_params, school.id)
+            contacts << contact
+          end
+        end
+
+        render json: { school: school, contacts: contacts }, status: :created
+      else
+        render json: { errors: school.errors.full_messages }, status: :unprocessable_entity
+        raise ActiveRecord::Rollback
       end
-
-      render json: { school: school, contacts: contacts }, status: :created
-    else
-      render json: { errors: school.errors.full_messages }, status: :unprocessable_entity
-      raise ActiveRecord::Rollback
     end
+  rescue ActiveRecord::RecordInvalid => e
+    render json: { error: e.message }, status: :unprocessable_entity
+  rescue StandardError => e
+    render json: { error: "An unexpected error occurred: #{e.message}" }, status: :internal_server_error
   end
-rescue ActiveRecord::RecordInvalid => e
-  render json: { error: e.message }, status: :unprocessable_entity
-rescue StandardError => e
-  render json: { error: "An unexpected error occurred: #{e.message}" }, status: :internal_server_error
-end
-
 
   # GET /api/schools/:id/contacts
   def contacts
