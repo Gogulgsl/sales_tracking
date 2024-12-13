@@ -42,10 +42,12 @@ class Api::OpportunitiesController < ApplicationController
     opportunity.createdby_user_id = user.id
     opportunity.updatedby_user_id = user.id
 
-    if opportunity.save
-      # Associate contacts
-      opportunity.contacts << Contact.where(id: opportunity_params[:contact_ids]) if opportunity_params[:contact_ids].present?
+    # Assign contacts using the provided contact_ids
+    if opportunity_params[:contact_ids].present?
+      opportunity.contacts = Contact.where(id: opportunity_params[:contact_ids])
+    end
 
+    if opportunity.save
       render json: opportunity.as_json(include: [:product, :school, :user, :contacts]), status: :created
     else
       render json: opportunity.errors, status: :unprocessable_entity
@@ -55,7 +57,7 @@ class Api::OpportunitiesController < ApplicationController
   # PUT /api/opportunities/:id
   def update
     if @opportunity.update(opportunity_params)
-      render json: @opportunity.as_json(include: [:product, :school, :user, :contact]), status: :ok
+      render json: @opportunity.as_json(include: [:product, :school, :user, :contacts]), status: :ok
     else
       render json: @opportunity.errors, status: :unprocessable_entity
     end
@@ -71,7 +73,7 @@ class Api::OpportunitiesController < ApplicationController
 
   # Fetch opportunity by ID
   def set_opportunity
-    @opportunity = Opportunity.includes(:product, :school, :user, :contact).find(params[:id])
+    @opportunity = Opportunity.includes(:product, :school, :user, :contacts).find(params[:id])
   end
 
   # Permit opportunity parameters

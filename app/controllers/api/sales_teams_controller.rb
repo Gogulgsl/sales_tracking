@@ -46,6 +46,6 @@ class Api::SalesTeamsController < ApplicationController
 
     # Only allow a trusted parameter "white list" through.
     def sales_team_params
-      params.require(:sales_team).permit(:user_id, :designation, :manager_id)
+      params.require(:sales_team).permit(:user_id, :designation, :manager_user_id)
     end
 end

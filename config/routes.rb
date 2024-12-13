@@ -18,6 +18,7 @@ Rails.application.routes.draw do
       end
       member do
         get :contacts
+        put :update_contacts
       end
     end
     resources :institutes
