@@ -7,12 +7,25 @@ module Api
 
     # GET /daily_statuses
     def index
-      @daily_statuses = DailyStatus.includes(:decision_maker_contact, :person_met_contact)
+      @daily_statuses = DailyStatus.includes(
+        :decision_maker_contact, 
+        :person_met_contact, 
+        :user, 
+        opportunity: :product
+      )
 
+      # Updated JSON response formatting in index and show actions
       render json: @daily_statuses.as_json(
         include: {
           decision_maker_contact: { only: [:id, :contact_name, :mobile, :decision_maker] },
-          person_met_contact: { only: [:id, :contact_name, :mobile, :decision_maker] }
+          person_met_contact: { only: [:id, :contact_name, :mobile, :decision_maker] },
+          user: { only: [:id, :username] },
+          opportunity: {
+            only: [:id, :opportunity_name], # Include relevant opportunity fields
+            include: {
+              product: { only: [:id, :product_name] } # Ensure product details are included
+            }
+          }
         }
       )
     end
