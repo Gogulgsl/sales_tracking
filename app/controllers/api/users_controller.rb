@@ -49,24 +49,22 @@
 
 
 class Api::UsersController < ApplicationController
- def index
-  users = User.includes(:manager_user).all
+  def index
+    users = User.includes(:manager_user).all
 
-  users_data = users.map do |user|
-    user_data = user.as_json
+    users_data = users.map do |user|
+      user_data = user.as_json
 
-    if user.role == 'sales_executive' && user.manager_user
-      # Include manager details in the user response
-      user_data[:manager_user] = user.manager_user.as_json(only: [:id, :username, :role]) # You can choose which fields to show
+      if user.role == 'sales_executive' && user.manager_user
+        # Include manager details in the user response
+        user_data[:manager_user] = user.manager_user.as_json(only: [:id, :username, :role]) # You can choose which fields to show
+      end
+
+      user_data
     end
 
-    user_data
+    render json: users_data
   end
-
-  render json: users_data
-end
-
-
 
   def show
     user = User.find(params[:id])
@@ -124,6 +122,6 @@ end
   private
 
   def user_params
-    params.require(:user).permit(:username, :password, :role, :reporting_manager_id)
+    params.require(:user).permit(:username, :password, :role, :reporting_manager_id, :email_id, :mobile_number)
   end
 end
