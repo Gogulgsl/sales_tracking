@@ -1,6 +1,6 @@
 class DailyStatus < ApplicationRecord
   belongs_to :user
-  belongs_to :opportunity
+  # belongs_to :opportunity
   belongs_to :school, optional: true
   belongs_to :decision_maker_contact, class_name: 'Contact', foreign_key: 'decision_maker_contact_id', optional: true
   belongs_to :person_met_contact, class_name: 'Contact', foreign_key: 'person_met_contact_id', optional: true
