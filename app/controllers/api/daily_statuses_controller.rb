@@ -11,6 +11,7 @@ module Api
         :decision_maker_contact, 
         :person_met_contact, 
         :user, 
+        :school,
         opportunity: :product
       )
 
@@ -20,6 +21,7 @@ module Api
           decision_maker_contact: { only: [:id, :contact_name, :mobile, :decision_maker] },
           person_met_contact: { only: [:id, :contact_name, :mobile, :decision_maker] },
           user: { only: [:id, :username] },
+          school: { only: [:id, :name] },
           opportunity: {
             only: [:id, :opportunity_name], # Include relevant opportunity fields
             include: {

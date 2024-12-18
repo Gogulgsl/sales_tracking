@@ -6,4 +6,5 @@ class School < ApplicationRecord
 
   validates :name, :institute_id, presence: true
   has_many :contacts, dependent: :destroy
+  has_many :daily_statuses
 end
