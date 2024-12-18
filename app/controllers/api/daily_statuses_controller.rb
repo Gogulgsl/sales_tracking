@@ -7,15 +7,26 @@ module Api
 
     # GET /daily_statuses
     def index
-      @daily_statuses = DailyStatus.includes(
-        :decision_maker_contact, 
-        :person_met_contact, 
-        :user, 
-        :school,
-        opportunity: :product
-      )
+      if current_user.role == 'sales_executive'
+        # Restrict to daily statuses created by the logged-in sales executive
+        @daily_statuses = DailyStatus.includes(
+          :decision_maker_contact, 
+          :person_met_contact, 
+          :user, 
+          :school,
+          opportunity: :product
+        ).where(user_id: current_user.id)
+      else
+        # Admins or other roles can view all daily statuses
+        @daily_statuses = DailyStatus.includes(
+          :decision_maker_contact, 
+          :person_met_contact, 
+          :user, 
+          :school,
+          opportunity: :product
+        )
+      end
 
-      # Updated JSON response formatting in index and show actions
       render json: @daily_statuses.as_json(
         include: {
           decision_maker_contact: { only: [:id, :contact_name, :mobile, :decision_maker] },
@@ -23,9 +34,9 @@ module Api
           user: { only: [:id, :username] },
           school: { only: [:id, :name] },
           opportunity: {
-            only: [:id, :opportunity_name], # Include relevant opportunity fields
+            only: [:id, :opportunity_name],
             include: {
-              product: { only: [:id, :product_name] } # Ensure product details are included
+              product: { only: [:id, :product_name] } 
             }
           }
         }
