@@ -99,13 +99,11 @@ end
     end
   end
 
+  def reporting_managers
+    admin_and_manager_users = User.where(role: ['admin', 'manager'])
 
-  def admins
-    admin_users = User.where(role: 'admin')
-
-    render json: admin_users.as_json(only: [:id, :username, :role, :created_at, :updated_at])
+    render json: admin_and_manager_users.as_json(only: [:id, :username, :role, :created_at, :updated_at])
   end
-
 
   def update
     user = User.find(params[:id])
