@@ -1,6 +1,10 @@
 Rails.application.routes.draw do
   namespace :api do
-    resources :users, only: [:index, :show, :create, :update, :destroy]
+    resources :users do
+      collection do
+        get :admins
+      end
+    end
     resources :cities, only: [:index, :show, :create, :update, :destroy]
     resources :zones, only: [:index, :show, :create, :update, :destroy]
     resources :cities_users, only: [:index, :create, :destroy]

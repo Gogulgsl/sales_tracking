@@ -100,7 +100,11 @@ end
   end
 
 
+  def admins
+    admin_users = User.where(role: 'admin')
 
+    render json: admin_users.as_json(only: [:id, :username, :role, :created_at, :updated_at])
+  end
 
 
   def update
