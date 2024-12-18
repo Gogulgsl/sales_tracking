@@ -24,12 +24,23 @@ class Api::SchoolsController < ApplicationController
     render json: schools, include: { institute: { only: [:name_of_head_of_institution, :institute_email_id, :designation, :number_of_schools_in_group] }, contacts: { only: [:contact_name, :mobile, :decision_maker] } }
   end
 
-
-
   def active_schools
-    schools = School.where(is_active: true)
-    render json: schools
+    # Fetch active schools and eagerly load the associated institute and contacts
+    schools = School.includes(:institute).where(is_active: true)
+
+    if schools.any?
+      render json: schools.as_json(
+        include: {
+          institute: {
+            only: [:name_of_head_of_institution, :institute_email_id, :designation, :number_of_schools_in_group]
+          }
+        }
+      ), status: :ok
+    else
+      render json: { message: 'No active schools found' }, status: :not_found
+    end
   end
+
 
   # GET /api/schools/:id
   def show
