@@ -3,25 +3,29 @@ class Api::SchoolsController < ApplicationController
   before_action :authorize_user, except: [:index, :show, :my_opportunities, :active_schools]
   before_action -> { authorize_role('admin', 'sales_executive') }, only: [:index]
 
-
-  # GET /api/schools
   def index
     if current_user.nil?
       return render json: { error: 'Unauthorized - No current user' }, status: :unauthorized
     end
 
     if current_user.role == 'admin'
-      # Admin can see all schools
       schools = School.includes(:institute, :contacts).all
     elsif current_user.role == 'sales_executive'
-      # Sales executive can only see active schools
       schools = School.includes(:institute, :contacts).where(is_active: true)
     else
-      # Default case: If role is not recognized, return an empty list or raise an error
       schools = []
     end
 
-    render json: schools, include: { institute: { only: [:name_of_head_of_institution, :institute_email_id, :designation, :number_of_schools_in_group] }, contacts: { only: [:contact_name, :mobile, :decision_maker] } }
+    render json: schools.map { |school| 
+      school.as_json(include: {
+        institute: {
+          only: [:name_of_head_of_institution, :institute_email_id, :designation, :number_of_schools_in_group]
+        },
+        contacts: { only: [:contact_name, :mobile, :decision_maker] }
+      }).merge({
+        institute: school.institute || {}
+      })
+    }, status: :ok
   end
 
   def active_schools
@@ -29,13 +33,17 @@ class Api::SchoolsController < ApplicationController
     schools = School.includes(:institute).where(is_active: true)
 
     if schools.any?
-      render json: schools.as_json(
-        include: {
-          institute: {
-            only: [:name_of_head_of_institution, :institute_email_id, :designation, :number_of_schools_in_group]
+      render json: schools.map { |school| 
+        school.as_json(
+          include: {
+            institute: {
+              only: [:name_of_head_of_institution, :institute_email_id, :designation, :number_of_schools_in_group]
+            }
           }
-        }
-      ), status: :ok
+        ).merge({
+          institute: school.institute || {} # Ensures an empty object if no institute is found
+        })
+      }, status: :ok
     else
       render json: { message: 'No active schools found' }, status: :not_found
     end
