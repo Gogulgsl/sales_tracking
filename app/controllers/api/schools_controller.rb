@@ -59,38 +59,47 @@ class Api::SchoolsController < ApplicationController
     render json: @school
   end
 
-  def create
+   def create
     ActiveRecord::Base.transaction do
-      # Only assign institute if part_of_group_school is true
+      # Initialize institute if part_of_group_school is true
       institute = nil
-      if params[:school][:part_of_group_school] == true
+      if params.dig(:school, :part_of_group_school)
         institute = find_or_create_institute(params[:school][:institute])
       end
 
+      # Create the school
       school = School.new(school_params.merge(institute_id: institute&.id))
 
       if school.save
+        # Initialize an array for contacts
         contacts = []
 
+        # Check if a single contact or multiple contacts are being passed
         if params[:school][:contact].present?
+          # Handle single contact creation
           contact = find_or_create_contact(params[:school][:contact], school.id)
           contacts << contact
         elsif params[:school][:contacts].present?
+          # Handle multiple contacts creation
           params[:school][:contacts].each do |contact_params|
             contact = find_or_create_contact(contact_params, school.id)
             contacts << contact
           end
         end
 
+        # Render the response with school and associated contacts
         render json: { school: school, contacts: contacts }, status: :created
       else
+        # If the school creation fails, return errors
         render json: { errors: school.errors.full_messages }, status: :unprocessable_entity
         raise ActiveRecord::Rollback
       end
     end
   rescue ActiveRecord::RecordInvalid => e
-    render json: { error: e.message }, status: :unprocessable_entity
+    # Handle validation errors specifically
+    render json: { error: "Record invalid: #{e.message}" }, status: :unprocessable_entity
   rescue StandardError => e
+    # Handle general errors
     render json: { error: "An unexpected error occurred: #{e.message}" }, status: :internal_server_error
   end
 
@@ -271,9 +280,8 @@ class Api::SchoolsController < ApplicationController
     institute
   end
 
-  # Helper to find or create a Contact
   def find_or_create_contact(contact_params, school_id)
-    contact = Contact.find_by(mobile: contact_params[:mobile])
+    contact = Contact.find_by(mobile: contact_params[:mobile], school_id: school_id)
     unless contact
       contact = Contact.create!(
         contact_name: contact_params[:contact_name],
