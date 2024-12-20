@@ -106,7 +106,7 @@ class Api::UsersController < ApplicationController
   def update
     user = User.find(params[:id])
 
-    if user.update(user_params)
+    if user.update(user_update_params)
       render json: user
     else
       render json: user.errors, status: :unprocessable_entity
@@ -123,5 +123,9 @@ class Api::UsersController < ApplicationController
 
   def user_params
     params.require(:user).permit(:username, :password, :role, :reporting_manager_id, :email_id, :mobile_number, :is_active)
+  end
+
+  def user_update_params
+    params.require(:user).permit(:username, :role, :reporting_manager_id, :email_id, :mobile_number, :is_active)
   end
 end
