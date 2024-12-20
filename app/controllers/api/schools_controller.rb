@@ -41,7 +41,6 @@ class Api::SchoolsController < ApplicationController
     end
   end
 
-
   # GET /api/schools/:id
   def show
     render json: @school
@@ -49,9 +48,13 @@ class Api::SchoolsController < ApplicationController
 
   def create
     ActiveRecord::Base.transaction do
-      institute = find_or_create_institute(params[:school][:institute])
+      # Only assign institute if part_of_group_school is true
+      institute = nil
+      if params[:school][:part_of_group_school] == true
+        institute = find_or_create_institute(params[:school][:institute])
+      end
 
-      school = School.new(school_params.merge(institute_id: institute.id))
+      school = School.new(school_params.merge(institute_id: institute&.id))
 
       if school.save
         contacts = []
