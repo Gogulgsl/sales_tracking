@@ -17,13 +17,18 @@ class Api::SchoolsController < ApplicationController
     end
 
     render json: schools.map { |school| 
-      school.as_json(include: {
-        institute: {
-          only: [:name_of_head_of_institution, :institute_email_id, :designation, :number_of_schools_in_group]
-        },
-        contacts: { only: [:contact_name, :mobile, :decision_maker] }
-      }).merge({
-        institute: school.institute || {}
+      school.as_json(
+        include: {
+          institute: {
+            only: [:name_of_head_of_institution, :institute_email_id, :designation, :number_of_schools_in_group]
+          },
+          contacts: {
+            only: [:contact_name, :mobile, :decision_maker]
+          }
+        }
+      ).merge({
+        institute: school.institute || {}, # Ensure that institute is always present
+        contacts: school.contacts.present? ? school.contacts : [] # Return empty array if no contacts
       })
     }, status: :ok
   end
@@ -171,11 +176,22 @@ class Api::SchoolsController < ApplicationController
 
   # PUT /api/schools/:id
   def update
-    if @school.update(school_params)
-      render json: @school
-    else
-      render json: { errors: @school.errors.full_messages }, status: :unprocessable_entity
+    ActiveRecord::Base.transaction do
+      institute = nil
+      if params[:school][:part_of_group_school] == true && params[:school][:institute].present?
+        institute = find_or_create_institute(params[:school][:institute])
+      end
+
+      if @school.update(school_params.merge(institute_id: institute&.id))
+        render json: @school, status: :ok
+      else
+        render json: { errors: @school.errors.full_messages }, status: :unprocessable_entity
+      end
     end
+  rescue ActiveRecord::RecordInvalid => e
+    render json: { error: e.message }, status: :unprocessable_entity
+  rescue StandardError => e
+    render json: { error: "An unexpected error occurred: #{e.message}" }, status: :internal_server_error
   end
 
   # DELETE /api/schools/:id
