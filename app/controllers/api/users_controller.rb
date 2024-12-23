@@ -136,30 +136,30 @@ class Api::UsersController < ApplicationController
 
   def reset_password
     token = params[:reset_token]
-    old_password = params[:old_password]
     new_password = params[:new_password]
     confirm_password = params[:confirm_password]
 
+    # Find the user by the reset token
     user = User.find_by(reset_password_token: token)
 
+    # Check if the user exists and the reset token is not expired
     if user && user.reset_password_sent_at > 2.hours.ago
-      if user.authenticate(old_password) # Ensure the old password matches
-        if new_password == confirm_password
-          if user.update(password: new_password, reset_password_token: nil, reset_password_sent_at: nil)
-            render json: { message: "Password reset successfully." }, status: :ok
-          else
-            render json: { error: user.errors.full_messages }, status: :unprocessable_entity
-          end
+      # Check if new password and confirm password match
+      if new_password == confirm_password
+        # Update the user's password and clear reset token
+        if user.update(password: new_password, reset_password_token: nil, reset_password_sent_at: nil)
+          render json: { message: "Password reset successfully." }, status: :ok
         else
-          render json: { error: "New password and confirmation password do not match." }, status: :unprocessable_entity
+          render json: { error: user.errors.full_messages }, status: :unprocessable_entity
         end
       else
-        render json: { error: "Old password is incorrect." }, status: :unprocessable_entity
+        render json: { error: "New password and confirmation password do not match." }, status: :unprocessable_entity
       end
     else
       render json: { error: "Invalid or expired reset token." }, status: :unprocessable_entity
     end
   end
+
 
   private
 
