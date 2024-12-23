@@ -3,6 +3,8 @@ Rails.application.routes.draw do
     resources :users do
       collection do
         get :reporting_managers
+        post :forgot_password
+        post :reset_password
       end
     end
     resources :cities, only: [:index, :show, :create, :update, :destroy]

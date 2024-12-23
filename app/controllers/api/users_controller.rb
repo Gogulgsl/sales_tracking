@@ -119,6 +119,48 @@ class Api::UsersController < ApplicationController
     head :no_content
   end
 
+  def forgot_password
+    user = User.find_by(email_id: params[:email_id]) # Or use :username depending on your app
+    
+    if user
+      reset_token = SecureRandom.hex(10) # Generate a random reset token
+      user.update(reset_password_token: reset_token, reset_password_sent_at: Time.current)
+
+      # Return the reset token to the frontend (useful for reset form redirection)
+      render json: { reset_token: reset_token, message: "Reset token generated successfully." }, status: :ok
+    else
+      render json: { error: "User not found." }, status: :not_found
+    end
+  end
+
+
+  def reset_password
+    token = params[:reset_token]
+    old_password = params[:old_password]
+    new_password = params[:new_password]
+    confirm_password = params[:confirm_password]
+
+    user = User.find_by(reset_password_token: token)
+
+    if user && user.reset_password_sent_at > 2.hours.ago
+      if user.authenticate(old_password) # Ensure the old password matches
+        if new_password == confirm_password
+          if user.update(password: new_password, reset_password_token: nil, reset_password_sent_at: nil)
+            render json: { message: "Password reset successfully." }, status: :ok
+          else
+            render json: { error: user.errors.full_messages }, status: :unprocessable_entity
+          end
+        else
+          render json: { error: "New password and confirmation password do not match." }, status: :unprocessable_entity
+        end
+      else
+        render json: { error: "Old password is incorrect." }, status: :unprocessable_entity
+      end
+    else
+      render json: { error: "Invalid or expired reset token." }, status: :unprocessable_entity
+    end
+  end
+
   private
 
   def user_params
